@@ -3,6 +3,7 @@ opencv-python-headless
 numpy
 matplotlib
 scipy
-Werkzeug
-Pillow
+pillow
 scikit-image
+gunicorn
+Werkzeug
