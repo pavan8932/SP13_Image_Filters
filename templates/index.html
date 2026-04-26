@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SP13 - Image Smoothing & Sharpening | Image Filters Web App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .sp13-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 50px;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .upload-section {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f8f9ff;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        #file-input {
+            display: none;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #da190b;
+        }
+        
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #45a049;
+        }
+        
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+        
+        .flash {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .flash.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .flash.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .info-bar {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        
+        .info-item {
+            margin: 5px 15px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #1976d2;
+        }
+        
+        .section-title {
+            font-size: 1.5em;
+            color: #333;
+            margin: 30px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 20px 0;
+        }
+        
+        .card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        
+        .card-header {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .card-header.blue {
+            background: #2196F3;
+        }
+        
+        .card-header.green {
+            background: #4CAF50;
+        }
+        
+        .card-header.orange {
+            background: #ff9800;
+        }
+        
+        .card-header.red {
+            background: #f44336;
+        }
+        
+        .card img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .card-metric {
+            padding: 10px;
+            text-align: center;
+            background: white;
+            font-size: 0.9em;
+            border-top: 1px solid #eee;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        
+        .metric-label {
+            font-size: 0.85em;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        
+        .filter-description {
+            background: #f0f4ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .filter-description h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .filter-description ul {
+            margin-left: 20px;
+            color: #555;
+        }
+        
+        .filter-description li {
+            margin: 8px 0;
+        }
+        
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                padding: 15px;
+            }
+            .image-grid {
+                grid-template-columns: 1fr;
+            }
+            .header h1 {
+                font-size: 1.5em;
+            }
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .filename-display {
+            margin-top: 15px;
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🖼️ SP13: Image Smoothing & Sharpening</h1>
+            <p>Mean Filter | Gaussian Filter | Laplacian Filter | Median Filter | Bilateral Filter</p>
+            <div class="sp13-badge">🎯 Signal Processing Project - Image Filtering & Edge Enhancement</div>
+        </div>
+        
+        <div class="content">
+            <div class="upload-section">
+                <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data">
+                    <div class="upload-area" onclick="document.getElementById('file-input').click()">
+                        <div class="upload-icon">📸</div>
+                        <p><strong>Click to upload an image</strong></p>
+                        <p style="font-size: 0.85em; color: #666;">Supports: PNG, JPG, JPEG, BMP, TIFF</p>
+                        <input type="file" name="image" id="file-input" accept="image/*" required>
+                    </div>
+                    <div class="filename-display" id="filename-display"></div>
+                    <div style="margin-top: 20px;">
+                        <button type="submit" class="btn btn-primary">🚀 Apply Filters</button>
+                        <a href="/clear" class="btn btn-danger">🗑️ Clear All</a>
+                    </div>
+                </form>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 10px;">Processing your image...</p>
+                </div>
+            </div>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="flash {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            
+            {% if input_image %}
+            <div class="info-bar">
+                <div class="info-item"><span class="info-label">📏 Image Size:</span> {{ image_width }} x {{ image_height }} pixels</div>
+                <div class="info-item"><span class="info-label">🎨 Type:</span> {{ image_type }}</div>
+                <div class="info-item"><span class="info-label">📊 Sharpness Score:</span> Higher = Sharper</div>
+            </div>
+            
+            <!-- Metrics Summary -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value">{{ metrics.original }}</div>
+                    <div class="metric-label">Original Sharpness</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">{{ metrics.mean }}</div>
+                    <div class="metric-label">Mean Filter (Blur)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">{{ metrics.gaussian }}</div>
+                    <div class="metric-label">Gaussian Filter (Blur)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">{{ metrics.laplacian }}</div>
+                    <div class="metric-label">Laplacian Filter (Sharp)</div>
+                </div>
+            </div>
+            
+            <!-- Filter Theory Explanation -->
+            <div class="filter-description">
+                <h3>📖 Understanding SP13: Smoothing vs Sharpening</h3>
+                <ul>
+                    <li><strong>Mean Filter (Smoothing):</strong> Averages neighboring pixels → <strong>Reduces noise, creates blur</strong></li>
+                    <li><strong>Gaussian Filter (Smoothing):</strong> Weighted average (center matters more) → <strong>Natural blur, better edge preservation</strong></li>
+                    <li><strong>Laplacian Filter (Sharpening):</strong> Detects edges using second derivative → <strong>Enhances details, makes image sharper</strong></li>
+                    <li><strong>Median Filter:</strong> Takes median of neighbors → <strong>Removes salt-and-pepper noise</strong></li>
+                    <li><strong>Bilateral Filter:</strong> Edge-preserving smoothing → <strong>Blurs while keeping edges sharp</strong></li>
+                </ul>
+            </div>
+            
+            <!-- Main Results Grid -->
+            <h2 class="section-title">🎯 Filter Results</h2>
+            <div class="image-grid">
+                <div class="card">
+                    <div class="card-header">📸 Original Image</div>
+                    <img src="{{ input_image }}" alt="Original">
+                    <div class="card-metric">Sharpness: {{ metrics.original }}</div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header blue">✨ Mean Filter (Smoothing)</div>
+                    <img src="{{ mean_image }}" alt="Mean Filter">
+                    <div class="card-metric">Blur Level: {{ metrics.mean }} | Removes noise</div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header green">🌟 Gaussian Filter (Smoothing)</div>
+                    <img src="{{ gaussian_image }}" alt="Gaussian Filter">
+                    <div class="card-metric">Blur Level: {{ metrics.gaussian }} | Natural blur</div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header orange">⚡ Laplacian Filter (Sharpening)</div>
+                    <img src="{{ laplacian_image }}" alt="Laplacian Filter">
+                    <div class="card-metric">Sharpness: {{ metrics.laplacian }} | Edge enhancement</div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header" style="background: #9C27B0;">🔷 Laplacian Edges Only</div>
+                    <img src="{{ laplacian_edge_image }}" alt="Edges">
+                    <div class="card-metric">Edge detection result</div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header" style="background: #00BCD4;">🪶 Bilateral Filter</div>
+                    <img src="{{ bilateral_image }}" alt="Bilateral">
+                    <div class="card-metric">Edge-preserving smoothing</div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header" style="background: #FF5722;">📊 Median Filter</div>
+                    <img src="{{ median_image }}" alt="Median">
+                    <div class="card-metric">Noise removal filter</div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header" style="background: #607D8B;">📈 Comparison Grid</div>
+                    <img src="{{ comparison_grid }}" alt="Comparison">
+                    <div class="card-metric">All filters side by side</div>
+                </div>
+            </div>
+            
+            <!-- Histograms -->
+            <h2 class="section-title">📊 Histogram Analysis</h2>
+            <div class="image-grid">
+                <div class="card">
+                    <div class="card-header">Original Histogram</div>
+                    <img src="{{ hist_original }}" alt="Original Histogram">
+                </div>
+                
+                <div class="card">
+                    <div class="card-header blue">Mean Filter Histogram</div>
+                    <img src="{{ hist_mean }}" alt="Mean Histogram">
+                </div>
+                
+                <div class="card">
+                    <div class="card-header green">Gaussian Filter Histogram</div>
+                    <img src="{{ hist_gaussian }}" alt="Gaussian Histogram">
+                </div>
+                
+                <div class="card">
+                    <div class="card-header orange">Laplacian Histogram</div>
+                    <img src="{{ hist_laplacian }}" alt="Laplacian Histogram">
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <footer>
+            <p>SP13: Image Smoothing and Sharpening | Mean, Gaussian, and Laplacian Filters</p>
+            <p>Signal Processing Project | Compare Blurring vs Edge Enhancement</p>
+        </footer>
+    </div>
+    
+    <script>
+        // Show filename when selected
+        document.getElementById('file-input').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name;
+            if (fileName) {
+                document.getElementById('filename-display').innerHTML = `📄 Selected: ${fileName}`;
+            }
+        });
+        
+        // Show loading spinner on form submit
+        document.getElementById('upload-form').addEventListener('submit', function() {
+            document.getElementById('loading').style.display = 'block';
+            document.querySelector('.upload-section .btn-primary').disabled = true;
+        });
+    </script>
+</body>
+</html>
